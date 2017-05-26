@@ -1,0 +1,150 @@
+%Dokumenttyp + Encoding
+\documentclass[final, paper=a4, paper=portrait, pagesize=auto, fontsize=10pt,english]{scrartcl}
+\usepackage[utf8]{inputenc}
+
+\usepackage[a4paper, total={6.5in, 9in}]{geometry}
+\usepackage{graphicx}
+\usepackage[]{hyperref}
+\usepackage{amsmath}
+
+\usepackage{lmodern} %Schriftarten
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage{placeins}
+\definecolor{mygreen}{rgb}{0.33,0.63,0.33}
+\definecolor{mygray}{rgb}{0.95,0.95,0.95}
+\definecolor{myblue}{rgb}{0.23,0.23,0.52}
+\renewcommand{\arraystretch}{1.5}
+
+
+\usepackage{listings} %for code
+\lstset{ 
+	 backgroundcolor=\color{mygray},
+	 commentstyle=\color{mygreen},
+	 numbers=left,
+	 keywordstyle=\textbf,
+	 language=Java,
+	 tabsize=3,  
+	 basicstyle=\footnotesize,
+}
+
+
+\begin{document}
+
+\title{A Chess Application}
+\subtitle{Report on the final project of COSC 3P71}
+\date{December 2016}
+\author{Torben Krüger and Maike Rees}
+\maketitle
+
+\newpage
+ 
+\section{Problem Definition}
+The task for our final project was to code a chess application. This application should be playable by one player who plays against an artificial intelligence. For the artificial intelligence we have to use a tree-search sheme with alpha-beta-pruning. We are using the minmax-strategy.
+
+\section{Development}
+We developed this application using Java for the Logic and JavaFX for the GUI. Our IDE is Eclipse Mars on Windows 7. \\
+
+We found inspiring articles about evaluating functions in chess on this Website 
+\href{http://chessprogramming.wikispaces.com/Evaluation}{\textbf{chessprogramming - evaluation}}  and the evaluation function that our AI uses ist mostly oriented from here
+\href{https://chessprogramming.wikispaces.com/Simplified+evaluation+function}{\textbf{chessprogramming - Simplified evaluation function}}. We chose this approach because we wanted to keep it clear and simple at first but with enough possibilities to develop a more specific evaluation function later on. \\
+
+In the application there are two play modes, one with a GUI and one with a TUI which has an ASCI representation of the board and lets you make moves by typing in the coordinates. Please consider that the GUI has  more options like restart, undo and close.
+
+\section{Design Choices}
+This section explains the design choices we made before and while programming the chess application to give you a better understanding how the application works inside.
+\subsection{Basics}
+We chose an object-orientated approach with nearly no complexe datastructures but some enums and abstract classes. For a better overview our project is grouped in different packages.
+\subsection{Player}
+The Players are represented by a single enum that contains black and white and a simple \textit{toString}-method. 
+\subsection{The Game}
+The Game class represents - of course - a Game. The Game contains the current board and a stack of previous boards that gives us the chance to implement an undo function where the player can undo his/her previous moves. 
+
+This is one of the reasons why we chose to have a Game class and a Board class. Another one is that here the Board does not have to bother with coordinates that are out of range because the Game will catch them before handing over coordinates to the Board. For every move that is made a new Board is created. 
+
+The GUI knows the Game which manages the current Board etc for it.
+\subsection{Board Representation}
+Each board has a couple of attributes:
+\begin{itemize}
+\item The current player
+\item The state of the board (check / checkmate / stalemate / draw / ...)
+\item The previous board (this is used for the search that is discussed later on)
+\item Markers for both players that are used for handling \textit{en passant} moves
+\item The values of both players for the current board, calculated by the evaluation function
+\end{itemize}
+The chess board itself is represented by a two-dimensional 8 x 8 Figure array which contains the chess figures on their associated squares or \textbf{null} if no piece is currently sitting on the square.
+
+The board can set, remove and find a figure on the itself. After every move it evaluates if a \textit{Promotion} can take place and executes it if so. 
+Additionally, the board can calculate its own value.
+
+\subsubsection{Pieces Representation}	
+The Pieces are represented by the abstract class \textbf{Figures}. Every Figure knows its owner, board, coordinates and implements the abstract \textbf{clone()} and \textbf{isSquareReachable()} methods. The second method implements the logic what a legal move for the specific piece is. It knows its material value and its position matrix. Some Figures additional have some special parameters that will be discussed.\\
+
+The King piece has an attribute called \textbf{hasBeenMoved} and overrides the \textbf{move} method. Both are needed for the \textit{castling} move. The King's evaluation matrix changes during the course of the game. This means that for the evaluation function a matrix exists for the beginning and middle part of the game as well as another for the end part of the game. Hence the king provides methods to deal with this. \\
+
+The Rook also provides an attribute called \textbf{hasBeenMoved} to deal with the \textit{casteling} move.\\
+
+The Pawn has to additional attributes (\textbf{enPassant, startMove}) to be able to handle the \textit{en passant} move. For the same purpose, it also overrides the \textbf{move} method.
+
+\subsection{Evaluation Function}
+The evaluation function that we use is pretty simple but sufficient and fast. It is composed of two parts.
+
+Every type of figure has an assigned value. These values are chosen due to chess strategies that can be read in the linked website above. The unit of those values is called centipawn (\( \frac{1}{100} \)Pawn).
+\begin{itemize}
+\item Pawn = 100
+\item Knight = 320
+\item Bishop = 330
+\item Rook = 500
+\item Queen= 900
+\item King = 20000
+\end{itemize}
+The second part is the evaluation matrix. Each piece has its own evaluation matrix that gives penalties for 'bad' squares on the board and rewards for 'good' squares on the board. \\
+An example: The Evaluation Matrix of the Pawn:
+\begin{lstlisting}
+private final static int[][] EVAL = {
+			{   0,   5,   5,   0,   5,  10,  50,   0 },
+			{   0,  10,  -5,   0,   5,  10,  50,   0 },
+			{   0,  10, -10,   0,  10,  20,  50,   0 },
+			{   0, -20,   0,  20,  25,  30,  50,   0 },
+			{   0, -20,   0,  20,  25,  30,  50,   0 },
+			{   0,  10, -10,   0,  10,  20,  50,   0 },
+			{   0,  10,  -5,   0,   5,  10,  50,   0 },
+			{   0,   5,   5,   0,   5,  10,  50,   0 }
+	};
+\end{lstlisting}
+Those two parts are calculated together like this: \\
+\textbf{Value of a piece = Material Value (Pawn = 100) + Position Value (EVAL[x][y])} \\\\
+In the Code (class Pawn):
+\begin{lstlisting}
+	@Override
+	public int getValue() {
+		int value = Pawn.VALUE;
+		switch (owner) {
+		case WHITE:
+			value += EVAL[x][y];
+			break;
+		case BLACK:
+			value += EVAL[x][7 - y];
+			break;
+		default:
+			throw new IllegalArgumentException();
+		}
+		return value;
+	}
+\end{lstlisting}
+
+So to get the final Evaluation function of a board-Object for e.g. the white Player you have to calculate: \\
+\textbf{Value of Board for white = Sum of all values of white pieces - Sum of all values of black pieces}
+
+
+\subsection{Search}
+Our search uses the MinMax - Strategy in a tree sheme with alpha-beta-pruning.
+
+\subsection{Embedding of the AI}
+
+\subsection{The GUI}
+For the GUI we chose to use the JavaFX framework for the simple reason that we have already used it earlier in out studies and have some experience with it. Further more the grid layout (\textit{GridPane}) that it provides is pretty straight forward for a chess board. 
+In the GUI you can chose the intelligence of the AI by chosing the ply. Furthermore, you can make use of the buttons undo, close and restart (which generates a completely new Game-Object).
+
+\end{document}
+	
