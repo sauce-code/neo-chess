@@ -16,3 +16,4 @@ hs_err_pid*
 
 # doc folder
 /doc/
+/target/
