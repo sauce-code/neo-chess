@@ -122,7 +122,7 @@ public class Gui extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
-		primaryStage.setTitle("Chess Game");
+		primaryStage.setTitle("Neo Chess");
 
 		initializeGrid();
 
