@@ -46,10 +46,28 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<artifactId>neo-chess</artifactId>
 	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
 		<dependency>
 			<groupId>javafx</groupId>
 			<artifactId>jfxrt</artifactId>
@@ -57,10 +75,24 @@
 			<scope>system</scope>
 			<systemPath>${java.home}/lib/ext/jfxrt.jar</systemPath>
 		</dependency>
+		<dependency>
+			<groupId>org.controlsfx</groupId>
+			<artifactId>controlsfx</artifactId>
+			<version>8.40.10</version>
+		</dependency>
 	</dependencies>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
+		<developers>
+		<developer>
+			<id>me</id>
+			<name>Torben Krüger</name>
+			<email>mail@sauce-code.com</email>
+			<url>http://www.sauce-code.com</url>
+			<timezone>UTC+01:00</timezone>
+		</developer>
+	</developers>
 </project>
